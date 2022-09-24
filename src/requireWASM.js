@@ -21,6 +21,7 @@
 const fs = require("fs");
 const path = require("path");
 const events = require("events");
+const wasm_help = require("./wasm_helpers.js");
 
 const loadEvent = new events.EventEmitter();
 
@@ -45,19 +46,19 @@ WebAssembly.instantiate(wasmBuffer, importObj).then(wasmModule => {
 });
 
 function hello() {
-  return __liftString(mod.hello() >>> 0);
+  return wasm_help.__liftString(mod, mod.hello() >>> 0);
 }
 
 function addDict(dict) {
-  dict = __lowerArray((pointer, value) => {
-    new Uint32Array(mod.memory.buffer)[pointer >>> 2] = __lowerString(value) ||
-    __notnull();
-  }, 4, 2, dict) || __notnull();
+  dict = wasm_help.__lowerArray(mod, (pointer, value) => {
+    new Uint32Array(mod.memory.buffer)[pointer >>> 2] = wasm_help.__lowerString(mod, value) ||
+    wasm_help.__notnull();
+  }, 4, 2, dict) || wasm_help.__notnull();
   mod.addDict(dict);
 }
 
 function isMisspelled(word) {
-  word = __lowerString(word) || __notnull();
+  word = wasm_help.__lowerString(mod, word) ||wasm_help. __notnull();
   return mod.isMisspelled(word) != 0;
 }
 
@@ -73,46 +74,3 @@ module.exports = {
   isMisspelled,
   sizeOfDict,
 };
-
-function __liftString(pointer) {
-  if (!pointer) return null;
-  const 
-    end = pointer + new Uint32Array(mod.memory.buffer)[pointer - 4 >>> 2] >>> 1,
-    memoryU16 = new Uint16Array(mod.memory.buffer);
-  let 
-    start = pointer >>> 1, 
-    string = "";
-  while (end - start > 1024) string += String.fromCharCode(...memoryyU16.subarray(start, start += 1024));
-  return string + String.fromCharCode(...memoryU16.subarray(start, end));
-}
-
-function __lowerArray(lowerElement, id, align, values) {
-  if (values == null) return 0;
-  const 
-    length = values.length,
-    buffer = mod.__pin(mod.__new(length << align, 0)) >>> 0,
-    header = mod.__pin(mod.__new(16, id)) >>> 0,
-    memoryU32 = new Uint32Array(mod.memory.buffer);
-  memoryU32[header + 0 >>> 2] = buffer;
-  memoryU32[header + 4 >>> 2] = buffer;
-  memoryU32[header + 8 >>> 2] = length << align;
-  memoryU32[header + 12 >>> 2] = length;
-  for (let i = 0; i < length; ++i) lowerElement(buffer + (i << align >>> 0), values[i]);
-  mod.__unpin(buffer);
-  mod.__unpin(header);
-  return header;
-}
-
-function __lowerString(value) {
-  if (value == null) return 0;
-  const 
-    length = value.length,
-    pointer = mod.__new(length << 1, 1) >>> 0,
-    memoryU16 = new Uint16Array(mod.memory.buffer);
-  for (let i = 0; i < length; ++i) memoryU16[(pointer >>> 1) + i] = value.charCodeAt(i);
-  return pointer;
-}
-
-function __notnull() {
-  throw TypeError("value must not be null");
-}
