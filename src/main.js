@@ -1,6 +1,6 @@
-// This file will export the JS used for this package 
-// Meanwhile the AssemblyScript/WASM will be used to quickly execute algorithms against 
-// variables passed via the JS 
+// This file will export the JS used for this package
+// Meanwhile the AssemblyScript/WASM will be used to quickly execute algorithms against
+// variables passed via the JS
 
 const fs = require("fs");
 const path = require("path");
@@ -11,12 +11,12 @@ const spell = require("./requireWASM.js");
 class SpellChecker {
   constructor(loaded = true) {
     this.spell = spell;
-    // loaded is defaulting to try, so when another system tries to create a class, 
-    // it'll assume it can access the underlying spell. But for our internal reference 
+    // loaded is defaulting to try, so when another system tries to create a class,
+    // it'll assume it can access the underlying spell. But for our internal reference
     // we can correctly define it as false initially, and update it later on.
     this.loaded = loaded;
-    
-    // Compatibility Consts 
+
+    // Compatibility Consts
     this.SPELLCHECKER_PREFER_HUNSPELL = "SPELLCHECKER_PREFER_HUNSPELL";
     this.USE_SYSTEM_DEFAULTS = "USE_SYSTEM_DEFAULTS";
     this.ALWAYS_USE_SYSTEM = "ALWAYS_USE_SYSTEM";
@@ -26,29 +26,29 @@ class SpellChecker {
     if (this.loaded) {
       spell.isMisspelled(word);
     } else {
-      // we default to false 
+      // we default to false
       return false;
     }
   }
   getCorrectionsForMisspelling(word) {
-    
+
   }
   checkSpelling(corpus) {
-    
+
   }
   checkSpellingAsync(corpus) {
-    
+
   }
   add(word) {
     if (this.loaded) {
       spell.addDict([ word ]);
     } else {
-      // TODO Should use global Atom API's to make this a notification 
+      // TODO Should use global Atom API's to make this a notification
       console.log(`SpellChecker failed to add ${word} to local dictionary. As its not yet loaded.`);
     }
   }
   setSpellcheckerType(type) {
-    // TODO use Atom API's for a notification 
+    // TODO use Atom API's for a notification
     console.log("setSpellcheckerType is no longer supported!");
   }
 }
@@ -62,14 +62,15 @@ spell.loadEvent.addListener("loaded", start);
 
 function start() {
   internalClass.loaded = true;
-  
+
   spell.addDict(en_dict);
-  
+
   console.log(spell.hello());
   console.log("the" + spell.isMisspelled("the"));
   console.log("tt" + spell.isMisspelled("tt"));
   console.log("teh" + spell.isMisspelled("tehhhhh"));
   console.log(spell.sizeOfDict());
+  console.log(spell.getCorrections("teh"));
 }
 
 // Since the . within a class causes a syntax error these need to be exported individually.
