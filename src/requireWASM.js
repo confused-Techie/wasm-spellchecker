@@ -1,6 +1,6 @@
 /**
- * It seems that AssemblyScript, while super cool, and fancy 
- * will only export the WASM compatiblity JS as ESM. But to exactly mirror what was done previously with 
+ * It seems that AssemblyScript, while super cool, and fancy
+ * will only export the WASM compatiblity JS as ESM. But to exactly mirror what was done previously with
  * node-spellchecker we need to use CommonJS.
  * So what this slight mess is, is an implmentation of AssemblyScript's WASM ESM JS, as CommonJS.
  * Here are some hints about how this was written:
@@ -8,14 +8,14 @@
  * - Then from that file we need to recreate the functions we care about, located in `adaptedExports`
  * - While implementing these, much of what we care about has been loaded into `mod`
  * The following will be generic conversions:
- * - memory.buffer => mod.memory.buffer 
- * - exports.FUNC => mod.FUNC 
+ * - memory.buffer => mod.memory.buffer
+ * - exports.FUNC => mod.FUNC
  *
- * Heres to hoping that these translation functions don't change often, and we can reuse them throughout 
+ * Heres to hoping that these translation functions don't change often, and we can reuse them throughout
  * development, but just in case, its a good idea to check release.js
  * It may be feasible to duplicate the helper functions from https://github.com/AssemblyScript/assemblyscript/blob/main/src/bindings/js.ts
  * into a module that this module can import. Allowing them to remain more on their own.
- * The biggest consideration there, is that some of these will require variables, that could be set 
+ * The biggest consideration there, is that some of these will require variables, that could be set
  * when called via these functions.
  */
 const fs = require("fs");
@@ -39,26 +39,28 @@ const importObj = {
 };
 
 WebAssembly.instantiate(wasmBuffer, importObj).then(wasmModule => {
-  
+
   mod = wasmModule.instance.exports;
 
-  loadEvent.emit("loaded");  
+  wasm_help.setMod(mod);
+
+  loadEvent.emit("loaded");
 });
 
 function hello() {
-  return wasm_help.__liftString(mod, mod.hello() >>> 0);
+  return wasm_help.__liftString(mod.hello() >>> 0);
 }
 
 function addDict(dict) {
-  dict = wasm_help.__lowerArray(mod, (pointer, value) => {
-    new Uint32Array(mod.memory.buffer)[pointer >>> 2] = wasm_help.__lowerString(mod, value) ||
+  dict = wasm_help.__lowerArray((pointer, value) => {
+    new Uint32Array(mod.memory.buffer)[pointer >>> 2] = wasm_help.__lowerString(value) ||
     wasm_help.__notnull();
   }, 4, 2, dict) || wasm_help.__notnull();
   mod.addDict(dict);
 }
 
 function isMisspelled(word) {
-  word = wasm_help.__lowerString(mod, word) ||wasm_help. __notnull();
+  word = wasm_help.__lowerString(word) ||wasm_help. __notnull();
   return mod.isMisspelled(word) != 0;
 }
 

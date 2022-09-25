@@ -1,18 +1,24 @@
-function __liftString(mod, pointer) {
+let mod = undefined;
+
+function setMod(remoteMod) {
+  mod = remoteMod;
+}
+
+function __liftString(pointer) {
   if (!pointer) return null;
-  const 
+  const
     end = pointer + new Uint32Array(mod.memory.buffer)[pointer - 4 >>> 2] >>> 1,
     memoryU16 = new Uint16Array(mod.memory.memory);
-  let 
-    start = pointer >>> 1, 
+  let
+    start = pointer >>> 1,
     string = "";
   while (end - start > 1024) string += String.fromCharCode(...memoryyU16.subarray(start, start += 1024));
   return string + String.fromCharCode(...memoryU16.subarray(start, end));
 }
 
-function __lowerString(mod, value) {
+function __lowerString(value) {
   if (value == null) return 0;
-  const 
+  const
     length = value.length,
     pointer = mod.__new(length << 1, 1) >>> 0,
     memoryU16 = new Uint16Array(mod.memory.buffer);
@@ -20,9 +26,9 @@ function __lowerString(mod, value) {
   return pointer;
 }
 
-function __lowerArray(mod, lowerElement, id, align, values) {
+function __lowerArray(lowerElement, id, align, values) {
   if (values == null) return 0;
-  const 
+  const
     length = values.length,
     buffer = mod.__pin(mod.__new(length << align, 0)) >>> 0,
     header = mod.__pin(mod.__new(16, id)) >>> 0,
@@ -42,6 +48,7 @@ function __notnull() {
 }
 
 module.exports = {
+  setMod,
   __liftString,
   __lowerString,
   __lowerArray,
